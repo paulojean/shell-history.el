@@ -8,32 +8,37 @@
 
 (require 'cl-lib)
 (require 'helm)
+(require 'dash)
 
 ;;; Code:
 
 (defun shell-history-get-history ()
   "Executes a shell command to get the history"
-  (let* ((history-command "HISTFILE=~/.bash_history && set -o history && history")
-         (split-string (shell-command-to-string history-command)
-                       "\n"))))
+  (-> "HISTFILE=~/.bash_history && set -o history && history"
+      shell-command-to-string
+      (split-string "\n")))
 
 (defun shell-history-parse-history (history)
   "Gets a list of commands in raw formart and remove leading white spaces and history number"
-  (mapcar (lambda (h)
-            (replace-regexp-in-string "[[:space:]]*[0-9][[:space:]]*"
-                                      ""
-                                      h))
-          history))
+  (-map (lambda (h)
+          (replace-regexp-in-string "[[:space:]]*[0-9][[:space:]]*"
+                                    ""
+                                    h))
+        history))
+
+(defun shell-history-build-helm-source (history)
+  (helm-build-sync-source "Shell history: "
+    :fuzzy-match t
+    :candidates history
+    :action (lambda (cmd) (insert cmd))))
 
 (defun shell-history ()
   "Open shell history and insert the selected command in the buffer"
   (interactive)
-  (let* ((raw-history (shell-history-get-history))
-         (history: (shell-history-parse-history raw-history)))
-    (helm :prompt "File: "
-          :sources  `(((name       . "Shell history: ")
-                       (candidates . ,history)
-                       (action     . (lambda (cmd) (insert cmd))))))))
+  (let* ((src (-> (shell-history-get-history)
+                  shell-history-parse-history
+                  shell-history-build-helm-source)))
+    (helm :sources src)))
 
 (provide 'shell-history)
 
