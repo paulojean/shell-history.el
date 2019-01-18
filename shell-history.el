@@ -31,7 +31,8 @@
     (let ((history (-> "HISTFILE=~/.bash_history && set -o history && history"
                        shell-command-to-string
                        (split-string "\n")
-                       shell-history/parse-history)))
+                       shell-history/parse-history
+                       reverse)))
       (setq shell-history/cache history))))
 
 (defun shell-history/clear-cache! ()
