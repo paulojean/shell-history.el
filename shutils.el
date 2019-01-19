@@ -7,7 +7,7 @@
 ;;; Code:
 
 
-(require 'shell-history)
+(require 'shutils-history)
 
 (provide 'shutils.el)
-;;; shell-history.el ends here
+;;; shutils.el ends here
