@@ -28,7 +28,7 @@
   (if (and (not refresh)
            (not (eq nil shell-history/cache)))
     shell-history/cache
-    (let ((history (-> "HISTFILE=~/.bash_history && set -o history && history"
+    (let ((history (-> "HISTFILE=~/.bash_history && set -o history && history | grep -Ev \"[^ -~]\""
                        shell-command-to-string
                        (split-string "\n")
                        shell-history/parse-history
