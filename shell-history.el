@@ -38,37 +38,45 @@
 (defun shell-history/clear-cache! ()
   (setq shell-history/cache '()))
 
+;;; extracted from https://stackoverflow.com/a/35711240/3939522
+(defun shell-history/delete-current-line ()
+  "Delete (not kill) the current line."
+  (interactive)
+  (save-excursion
+    (delete-region
+     (progn (forward-visible-line 0) (point))
+     (progn (forward-visible-line 1) (point)))))
+
 (defun shell-history/build-helm-source (history)
   (helm-build-sync-source "Shell history: "
     :fuzzy-match t
     :candidates history
-    :action (lambda (cmd) (insert cmd))))
+    :action (lambda (cmd)
+              (progn
+                (shell-history/delete-current-line)
+                (insert cmd)))))
 
-;;; taken from https://github.com/emacs-mirror/emacs/blob/be505726b68d407a44fdcd9c7ac1ef722398532d/lisp/comint.el#L1772
+;;; modified from https://github.com/emacs-mirror/emacs/blob/be505726b68d407a44fdcd9c7ac1ef722398532d/lisp/comint.el#L1772
+(defun shell-history/read-current-input ()
+  (let* ((proc (get-buffer-process (current-buffer)))
+         (pmark (process-mark proc)))
+    (goto-char (field-end))
+    (buffer-substring-no-properties pmark (point))))
+
 (defun shell-history/insert-current-line-to-cache! (&optional no-newline artificial)
   (interactive)
   (if (not no-newline) ;;; don't store if the command was aborted, ie: "C-c C-c"
-      (let* ((proc (get-buffer-process (current-buffer)))
-             (pmark (process-mark proc))
-             (input (if (>= (point) (marker-position pmark))
-                        (progn (if comint-eol-on-send
-                                   (if comint-use-prompt-regexp
-                                       (end-of-line)
-                                     (goto-char (field-end))))
-                               (buffer-substring-no-properties pmark (point)))
-                      (let ((copy (funcall comint-get-old-input)))
-                        (goto-char pmark)
-                        (insert copy)
-                        copy))))
-        (setq shell-history/cache (cons input
-                                        (shell-history/get-history!))))))
+      (setq shell-history/cache (cons (shell-history/read-current-input)
+                                      (shell-history/get-history!)))))
 
 (defun shell-history/show-history ()
   "Open shell history and insert the selected command in the buffer."
   (interactive)
   (let* ((src (-> (shell-history/get-history!)
-                  shell-history/build-helm-source)))
-    (helm :sources src)))
+                  shell-history/build-helm-source))
+         (current-input (shell-history/read-current-input)))
+    (helm :sources src
+          :input current-input)))
 
 (defun shell-history/stop-auto-update ()
   "Stop caching commands as they are sent to `shell`.
