@@ -28,12 +28,14 @@
   (if (and (not refresh)
            (not (eq nil shutils-history/cache)))
     shutils-history/cache
-    (let ((history (-> "HISTFILE=~/.bash_history && set -o history && history | grep -Ev \"[^ -~]\""
-                       shell-command-to-string
-                       (split-string "\n")
-                       shutils-history/parse-history
-                       reverse)))
-      (setq shutils-history/cache history))))
+    (progn
+      (message "shutils: fetching history...")
+      (let ((history (-> "HISTFILE=~/.bash_history && set -o history && history | grep -Ev \"[^ -~]\""
+                         shell-command-to-string
+                         (split-string "\n")
+                         shutils-history/parse-history
+                         reverse)))
+        (setq shutils-history/cache history) ))))
 
 (defun shutils-history/clear-cache! ()
   (setq shutils-history/cache '()))
@@ -64,8 +66,12 @@
 
 (defun shutils-history/insert-current-line-to-cache! (&optional no-newline artificial)
   (if (not no-newline) ;;; don't store if the command was aborted, ie: "C-c C-c"
-      (setq shutils-history/cache (cons (shutils-history/read-current-input)
-                                      (shutils-history/get-history!)))))
+      (let ((new-command (shutils-history/read-current-input))
+            (history (shutils-history/get-history!)))
+        (unless (-> history
+                    first
+                    (equal new-command))
+          (setq shutils-history/cache (cons new-command history))))))
 
 ;;;###autoload
 (defun shutils-history/show-history ()
