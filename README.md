@@ -16,8 +16,8 @@ Add all `.el` files to a directory and load it from emacs. Eg: you can copy ever
 (require 'shutils.el)
 
 ;;; The following line is optional, but recommened.
+;;; It makes possible to show new commands (sent from `emacs` shell) in the history's list.
 ;;; For dofumentation, see: https://github.com/paulojean/shutils.el/blob/master/shutils-history.el
-;;; But it makes sure that commands sent from `emacs` shell are shown in the list suggestions.
 (shutils-history/start-auto-update)
 
 ```
@@ -28,13 +28,12 @@ Now you can define a key sequence to load the history fuzzy finder, eg: assuming
 
 ```el
 (progn
-  '(evil-set-initial-state 'shell-mode 'normal)
   (evil-define-key 'normal shell-mode-map
     (kbd "C-r") 'shell-history/show-history)
   (evil-define-key 'insert shell-mode-map
     (kbd "C-r") 'shutils-history/show-history))
 ```
 
-And you can use `C-r` (in a shell buffer) to load the shell history (with fuzzy finder) and pick a command to put in the shell.
+And you can use `C-r` (in a shell buffer) to load the shell history (with fuzzy finder), pick a command and put it in the shell.
 
 Alternativelly, you can just `M-x shutils-history/show-history` from a shell buffer.
