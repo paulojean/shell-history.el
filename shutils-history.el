@@ -64,13 +64,22 @@
     (goto-char (field-end))
     (buffer-substring-no-properties pmark (point))))
 
+(defun shutils-history/is-trivial-command? (command)
+  (-> command
+      length
+      (<= 5)))
+
+(defun shutils-history/is-repeated-command? (command history)
+  (-> history
+      first
+      (equal command)))
+
 (defun shutils-history/insert-current-line-to-cache! (&optional no-newline artificial)
   (if (not no-newline) ;;; don't store if the command was aborted, ie: "C-c C-c"
       (let ((new-command (shutils-history/read-current-input))
             (history (shutils-history/get-history!)))
-        (unless (-> history
-                    first
-                    (equal new-command))
+        (unless (or (shutils-history/is-repeated-command? new-command history)
+                    (shutils-history/is-trivial-command? new-command))
           (setq shutils-history/cache (cons new-command history))))))
 
 ;;;###autoload
