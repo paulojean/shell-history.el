@@ -5,8 +5,11 @@ Utility functions to improve emacs shell.
 ## Instalation
 
 ### Dependencies
-- [`helm`](https://github.com/emacs-helm/helm)
 - [`dash`](https://github.com/magnars/dash.el)
+
+Either
+- [`helm`](https://github.com/emacs-helm/helm)
+- [`ivy`](https://github.com/abo-abo/swiper)
 
 ### Initialising
 
@@ -14,8 +17,10 @@ Add all `.el` files to a directory and load it from emacs. Eg: you can copy ever
 
 ``` el
 (add-to-list 'load-path "~/.emacs.d/lisp")
-;;; if you use [`helm`](https://github.com/emacs-helm/helm)
+;;; if you use `helm`
 (require 'shutils-history-helm)
+;;; if you use `ivy`
+(require 'shutils-history-ivy)
 
 ;;; The following line is optional, but recommened.
 ;;; It makes possible to show new commands (sent from `emacs` shell) in the history's list.
@@ -29,11 +34,19 @@ Add all `.el` files to a directory and load it from emacs. Eg: you can copy ever
 Now you can define a key sequence to load the history fuzzy finder, eg: assuming mode, you can do the following:
 
 ```el
+;;; for `helm`
 (progn
   (evil-define-key 'normal shell-mode-map
     (kbd "C-r") 'shell-history-helm/show-history)
   (evil-define-key 'insert shell-mode-map
     (kbd "C-r") 'shutils-history-helm/show-history))
+
+;;; for `ivy`
+(progn
+  (evil-define-key 'normal shell-mode-map
+    (kbd "C-r") 'shell-history-ivy/show-history)
+  (evil-define-key 'insert shell-mode-map
+    (kbd "C-r") 'shutils-history-ivy/show-history))
 ```
 
 And you can use `C-r` (in a shell buffer) to load the shell history (with fuzzy finder), pick a command and put it in the shell.

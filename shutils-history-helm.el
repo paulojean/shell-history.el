@@ -6,7 +6,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
 (require 'helm)
 (require 'shutils-history)
 
