@@ -10,10 +10,13 @@
 (require 'helm)
 (require 'dash)
 (require 'comint)
+(require 'subr-x)
 
 ;;; Code:
 
 (defvar shutils-history/cache '())
+
+(setq *shutils-history/partial-command* "")
 
 (defun shutils-history/parse-history (history)
   "Gets a list of commands in raw formart and remove leading white spaces and history number"
@@ -74,13 +77,31 @@
       first
       (equal command)))
 
+(defun shutils-history/prefix-with-partial-commands (command)
+  (-> *shutils-history/partial-command*
+      (concat " " (string-remove-suffix "\\" command))
+      string-trim
+      ((lambda (c) (->> c
+                        (replace-regexp-in-string "\\\\\n" "")
+                        (replace-regexp-in-string "\n" ""))))))
+
+(defun shutils-history/should-add-command-to-cache? (new-command history)
+  (not (or (shutils-history/is-repeated-command? new-command history)
+           (shutils-history/is-trivial-command? new-command)) ))
+
 (defun shutils-history/insert-current-line-to-cache! (&optional no-newline artificial)
-  (if (not no-newline) ;;; don't store if the command was aborted, ie: "C-c C-c"
-      (let ((new-command (shutils-history/read-current-input))
-            (history (shutils-history/get-history!)))
-        (unless (or (shutils-history/is-repeated-command? new-command history)
-                    (shutils-history/is-trivial-command? new-command))
-          (setq shutils-history/cache (cons new-command history))))))
+  (if no-newline ;;; don't save if the command was aborted, ie: "C-c C-c"
+    (setq *shutils-history/partial-command* "")
+    (let* ((new-command (string-trim (shutils-history/read-current-input)))
+           (history (shutils-history/get-history!))
+           (complete-command (shutils-history/prefix-with-partial-commands (string-remove-suffix "\\" new-command)))
+           (is-partial-command? (string-suffix-p "\\" new-command)))
+      (if is-partial-command?
+        (setq *shutils-history/partial-command* complete-command)
+        (progn
+          (when (shutils-history/should-add-command-to-cache? complete-command history)
+            (setq shutils-history/cache (cons complete-command history)))
+          (setq *shutils-history/partial-command* ""))))))
 
 ;;;###autoload
 (defun shutils-history/show-history ()
