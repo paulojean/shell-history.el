@@ -7,7 +7,6 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'helm)
 (require 'dash)
 (require 'comint)
 (require 'subr-x)
@@ -51,15 +50,6 @@
      (progn (forward-visible-line 0) (point))
      (progn (forward-visible-line 1) (point)))))
 
-(defun shutils-history/build-helm-source (history)
-  (helm-build-sync-source "Shell history: "
-    :fuzzy-match t
-    :candidates history
-    :action (lambda (cmd)
-              (progn
-                (shutils-history/delete-current-line)
-                (insert cmd)))))
-
 ;;; modified from https://github.com/emacs-mirror/emacs/blob/be505726b68d407a44fdcd9c7ac1ef722398532d/lisp/comint.el#L1772
 (defun shutils-history/read-current-input ()
   (let* ((proc (get-buffer-process (current-buffer)))
@@ -102,16 +92,6 @@
           (when (shutils-history/should-add-command-to-cache? complete-command history)
             (setq shutils-history/cache (cons complete-command history)))
           (setq *shutils-history/partial-command* ""))))))
-
-;;;###autoload
-(defun shutils-history/show-history ()
-  "Open shell history and insert the selected command in the buffer."
-  (interactive)
-  (let* ((src (-> (shutils-history/get-history!)
-                  shutils-history/build-helm-source))
-         (current-input (shutils-history/read-current-input)))
-    (helm :sources src
-          :input current-input)))
 
 ;;;###autoload
 (defun shutils-history/stop-auto-update ()
