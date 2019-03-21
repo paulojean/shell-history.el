@@ -15,6 +15,8 @@
 
 (defvar shutils-history/cache '())
 
+(defvar shutils-history/bash-history-path "~/.bash_history")
+
 (setq *shutils-history/partial-command* "")
 
 (defun shutils-history/parse-history (history)
@@ -29,14 +31,15 @@
   "Executes a shell command to get the history"
   (if (and (not refresh)
            (not (eq nil shutils-history/cache)))
-    shutils-history/cache
+      shutils-history/cache
     (progn
       (message "shutils: fetching history...")
-      (let ((history (-> "HISTFILE=~/.bash_history && set -o history && history | grep -Ev \"[^ -~]\""
-                         shell-command-to-string
-                         (split-string "\n")
-                         shutils-history/parse-history
-                         reverse)))
+      (let ((history (with-temp-buffer
+                       (insert-file-contents shutils-history/bash-history-path)
+                       (->> (split-string (buffer-string) "\n")
+                            (--filter (string-match "^[ -~]+$" it))
+                            (--filter (<= 5 (length it)))
+                            reverse))))
         (setq shutils-history/cache history) ))))
 
 (defun shutils-history/clear-cache! ()
