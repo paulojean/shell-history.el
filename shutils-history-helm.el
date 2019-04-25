@@ -1,6 +1,9 @@
-;;; shutils-history-helm.el --- access history from shutils-mode
+;;; shutils-history-ivy.el --- access history using helm as completion frontend
 
-;;; requires
+;; Author: Paulo Sousa <pauloj10@gmail.com>
+;; Package-Requires: ((helm "3.2"))
+
+;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 

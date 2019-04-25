@@ -1,6 +1,9 @@
-;;; shutils-history-ivy.el --- access history from shutils-mode
+;;; shutils-history-ivy.el --- access history using ivy as completion frontend
 
-;;; requires
+;; Author: Paulo Sousa <pauloj10@gmail.com>
+;; Package-Requires: ((ivy "0.11.0"))
+
+;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 

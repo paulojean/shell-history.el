@@ -1,6 +1,9 @@
-;;; shutils-history.el --- access history from shutils-mode
+;;; shutils-history.el --- access shell history from emacs' shell-mode
 
-;;; requires
+;; Author: Paulo Sousa <pauloj10@gmail.com>
+;; Package-Requires: ((dash "2.16.0"))
+
+;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
@@ -11,8 +14,6 @@
 (require 'comint)
 (require 'subr-x)
 
-;;; Code:
-
 (defvar shutils-history/cache '())
 
 (defvar shutils-history/bash-history-path "~/.bash_history")
@@ -21,11 +22,10 @@
 
 (defun shutils-history/parse-history (history)
   "Gets a list of commands in raw formart and remove leading white spaces and history number"
-  (-map (lambda (h)
-          (replace-regexp-in-string "[[:space:]]*[0-9][[:space:]]*"
-                                    ""
-                                    h))
-        history))
+  (--map (replace-regexp-in-string "[[:space:]]*[0-9][[:space:]]*"
+                                   ""
+                                   it)
+         history))
 
 (defun shutils-history/get-history! (&optional refresh)
   "Executes a shell command to get the history"
@@ -63,7 +63,7 @@
 (defun shutils-history/is-trivial-command? (command)
   (-> command
       length
-      (<= 5)))
+      (<= 6)))
 
 (defun shutils-history/is-repeated-command? (command history)
   (-> history
@@ -74,9 +74,8 @@
   (-> *shutils-history/partial-command*
       (concat " " (string-remove-suffix "\\" command))
       string-trim
-      ((lambda (c) (->> c
-                        (replace-regexp-in-string "\\\\\n" "")
-                        (replace-regexp-in-string "\n" ""))))))
+      (->> (replace-regexp-in-string "\\\\\n" "")
+           (replace-regexp-in-string "\n" ""))))
 
 (defun shutils-history/should-add-command-to-cache? (new-command history)
   (not (or (shutils-history/is-repeated-command? new-command history)
@@ -106,7 +105,10 @@ May result in recent commands not being displayed when invoking `shutils-history
 ;;;###autoload
 (defun shutils-history/start-auto-update ()
   (interactive)
-  "Caches every new command that is sent to `shell`."
+  "Caches every new command that is sent to `shell`.
+
+Without this you will have access only to the previous already in `shutils-history/cache`
+(by default, it will be whatever you have in ~/.bash_history` when first calling `shutils-history/show-history`."
     (advice-add 'comint-send-input :before 'shutils-history/insert-current-line-to-cache! ))
 
 (provide 'shutils-history)
