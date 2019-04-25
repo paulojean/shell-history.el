@@ -83,17 +83,22 @@
 
 (defun shutils-history/insert-current-line-to-cache! (&optional no-newline artificial)
   (if no-newline ;;; don't save if the command was aborted, ie: "C-c C-c"
-    (setq *shutils-history/partial-command* "")
+      (setq *shutils-history/partial-command* "")
     (let* ((new-command (string-trim (shutils-history/read-current-input)))
            (history (shutils-history/get-history!))
            (complete-command (shutils-history/prefix-with-partial-commands (string-remove-suffix "\\" new-command)))
            (is-partial-command? (string-suffix-p "\\" new-command)))
       (if is-partial-command?
-        (setq *shutils-history/partial-command* complete-command)
+          (setq *shutils-history/partial-command* complete-command)
         (progn
           (when (shutils-history/should-add-command-to-cache? complete-command history)
             (setq shutils-history/cache (cons complete-command history)))
           (setq *shutils-history/partial-command* ""))))))
+
+(defun shutils-history/replace-input-with-command (command)
+  "Clear shell's current input and add COMMAND to it."
+  (shutils-history/delete-current-line)
+  (insert command))
 
 ;;;###autoload
 (defun shutils-history/stop-auto-update ()
@@ -109,7 +114,7 @@ May result in recent commands not being displayed when invoking `shutils-history
 
 Without this you will have access only to the previous already in `shutils-history/cache`
 (by default, it will be whatever you have in ~/.bash_history` when first calling `shutils-history/show-history`."
-    (advice-add 'comint-send-input :before 'shutils-history/insert-current-line-to-cache! ))
+  (advice-add 'comint-send-input :before 'shutils-history/insert-current-line-to-cache! ))
 
 (provide 'shutils-history)
 

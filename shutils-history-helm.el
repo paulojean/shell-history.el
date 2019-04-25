@@ -13,13 +13,11 @@
 (require 'shutils-history)
 
 (defun shutils-history-helm/build-source (history)
+  "Create build source, with fuzzy finder, to HISTORY."
   (helm-build-sync-source "Shell history: "
     :fuzzy-match t
     :candidates history
-    :action (lambda (cmd)
-              (progn
-                (shutils-history/delete-current-line)
-                (insert cmd)))))
+    :action 'shutils-history/replace-input-with-command))
 
 ;;;###autoload
 (defun shutils-history-helm/show-history ()

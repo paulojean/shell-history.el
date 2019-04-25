@@ -19,8 +19,7 @@
   (when-let ((history (shutils-history/get-history!))
              (current-input (shutils-history/read-current-input))
              (cmd (ivy-read "Shell history: " history :initial-input current-input)))
-    (shutils-history/delete-current-line)
-    (insert cmd)))
+    (shutils-history/replace-input-with-command cmd)))
 
 (provide 'shutils-history-ivy)
 
